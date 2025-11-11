@@ -1,0 +1,68 @@
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  n8n:
+    build:
+      context: .
+      dockerfile: Dockerfile.n8n
+    image: n8n-custom:latest
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports: ["5678:5678"]
+    environment:
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=${POSTGRES_DB}
+      - DB_POSTGRESDB_USER=${POSTGRES_USER}
+      - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD}
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
+      - GENERIC_TIMEZONE=${GENERIC_TIMEZONE}
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - N8N_SECURE_COOKIE=false
+      - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL}
+      - EXECUTIONS_DATA_PRUNE=true
+      - EXECUTIONS_DATA_MAX_AGE=168
+      - ARTIFACTS_HOST_DIR=/srv/n8n/artifacts
+      - N8N_COMMUNITY_PACKAGES_ALLOW_TOOL_USAGE=true
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /srv/n8n/artifacts:/srv/n8n/artifacts
+    group_add:
+      - "${DOCKER_GID}"
+    restart: unless-stopped
+
+  mcp-runner:
+    build:
+      context: ./runner
+      dockerfile: Dockerfile
+    image: mcp-runner:latest
+    depends_on:
+      n8n:
+        condition: service_started
+    ports: ["8931:8931"]
+    # Share artifacts dir with n8n so both can read/send reports
+    volumes:
+      - /srv/n8n/artifacts:/srv/n8n/artifacts
+    restart: unless-stopped
+
+volumes:
+  pg_data:
+  n8n_data:

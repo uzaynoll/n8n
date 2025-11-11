@@ -1,0 +1,715 @@
+{
+  "name": "My workflow 2",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -208,
+        -640
+      ],
+      "id": "7227da25-c2fc-4378-8597-2b820e9d8987",
+      "name": "When chat message received",
+      "webhookId": "f1368a33-44d9-4c9e-bbc4-dc283647afb9"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Webhook1').item.json.body.url }}\n{{ $('Webhook1').item.json.body.description }}",
+        "options": {
+          "systemMessage": "=As an experienced software tester, please generate comprehensive test cases for a website using the connected tools, including detailed step-by-step instructions, ensuring the cases are clear and structured for input into another AI agent (who will actually write the test script and run them), covering various user scenarios, functionalities, and edge cases for thorough testing.\n\nALWAYS GENERATE AND PROVIDE OUTPUT SO THE OTHER AGENT CAN PERFROM THEIR WORK. THEY ARE DEPENDENT ON YOUR OUTPUT.\nALWAYS ADVISE THE NEXT AGENT TO EXECUTE ALL THE TEST CASES AND PROVIDE COMPREHENSIVE TEST RESULT FOR EACH TEST CASE/SCENARIO.",
+          "maxIterations": 100
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        288,
+        -640
+      ],
+      "id": "4fe00e13-c468-4ca8-8134-fbcca49d290f",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        48,
+        -416
+      ],
+      "id": "25e49260-08e5-41f7-a02a-2d458e234e56",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "__GOOGLE_PALM_API_ID__",
+          "name": "__GOOGLE_PALM_API_NAME__"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Webhook').item.json.body.url }}\n{{ $('Webhook').item.json.body.description }}",
+        "options": {
+          "systemMessage": "=You are an AI web automation agent. Analyze the given web page and use the available tools effectively.\n\nNote: Always grab a snapshot of a webpage before doing anything.\n\n1. **Understand the webpage*;\n  -  Understand what the webpage is meant to do, go deep and provide a summary of the website.\n\n2. **List Locators**: \n   - Identify different locators based on functionality (e.g., IDs, classes, XPath, CSS selectors) and group them accordingly. \n\n3. **Create Test Scenarios**: \n   - Develop several test scenarios that can be further elaborated into comprehensive test cases and automated test suites. \n\n**Example Scenarios**: \n   - Extracting product details from an e-commerce site.\n   - Scraping user reviews from a review platform.\n   - Gathering news headlines from a news website.\n\n- Always: page.waitForLoadState('domcontentloaded') after navigation.\n- Use networkidle only after the key selector is visible (SPAs can keep polling).\n\n# Selector policy (in order)\n1) Use stable attributes: name, id, role, data-test/data-testid first.\n2) If missing, use role/text queries (e.g., button:has-text(\"Login\")).\n3) Only then use CSS by class/tag (but avoid auto-generated class names).\n4) Never use nth-child/xpath unless nothing else exists.\n5) For inputs with labels, prefer label-based or name-based selectors.\n\n- If a selector isn’t found: retry with the next fallback selector.\n- If a tool returns a schema error (e.g., \"fields required\"): correct the payload to match the schema and retry once.\n- If logged-out is detected, or the browser context is destroyed, open the url again and redo from the login steps\n\nDo not use fill_form, use browser.type for entering data to input fields and use proper data types.\n\nBROWSER AUTOMATION RULES:\n- ALWAYS combine related browser actions into ONE Playwright tool execution\n- Never split login flows, form submissions, or data extraction across multiple tool calls\n- Each Playwright execution starts fresh - no shared state between calls\n\nExample: Instead of separate calls for navigate → login → extract, \ndo: \"Navigate to login page, enter credentials, submit form, and extract data\" in ONE call.\n\nAvailable Playwright Tools:\nNavigation & Page Control:\n\nbrowser_navigate - Navigate to URL (params: url)\nbrowser_navigate_back - Go back to previous page\nbrowser_close - Close the page\nbrowser_resize - Resize browser window (params: width, height)\nbrowser_tabs - Manage browser tabs (params: action, index)\n\nElement Interactions:\n\nbrowser_click - Click element (params: element, ref, doubleClick, button)\nbrowser_type - Type text into element (params: element, ref, text, submit, slowly)\nbrowser_hover - Hover over element (params: element, ref)\nbrowser_drag - Drag and drop (params: startElement, startRef, endElement, endRef)\nbrowser_select_option - Select dropdown option (params: element, ref, values)\n\nForm Handling:\n\nbrowser_fill_form - Fill multiple form fields (params: fields)\nbrowser_file_upload - Upload files (params: paths)\n\nPage Analysis:\n\nbrowser_snapshot - Capture accessibility snapshot (BETTER than screenshot for actions)\nbrowser_take_screenshot - Take visual screenshot (params: type, filename, element, ref, fullPage)\nbrowser_evaluate - Execute JavaScript (params: function, element, ref)\n\nWaiting & Timing:\n\nbrowser_wait_for - Wait for text/time (params: time, text, textGone)\n\nUtilities:\n\nbrowser_press_key - Press keyboard key (params: key)\nbrowser_handle_dialog - Handle dialogs (params: accept, promptText)\nbrowser_console_messages - Get console messages\nbrowser_network_requests - Get network requests\nbrowser_install - Install browser if missing\n\n\nAlways generate code using playwright codegen if available, or write code for playwright in TS.\n\nPLEASE INCLUDE THE FULL PATH FOR SCREENSHOT OR ANY OTHER IMAGES/FILES.",
+          "maxIterations": 100,
+          "returnIntermediateSteps": false,
+          "enableStreaming": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        544,
+        -48
+      ],
+      "id": "5f6218d8-7639-46cd-8c3f-de7f9b5911ac",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $execution.id }}",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        240,
+        -352
+      ],
+      "id": "d5a6394f-b91d-46ae-b371-484d167a7a9f",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "claude-3-5-haiku-20241022",
+          "mode": "list",
+          "cachedResultName": "Claude Haiku 3.5"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        464,
+        224
+      ],
+      "id": "cbd12f59-2d91-486c-9277-febb1b48f5eb",
+      "name": "Anthropic Chat Model",
+      "credentials": {
+        "anthropicApi": {
+          "id": "__ANTHROPIC_API_ID__",
+          "name": "__ANTHROPIC_API_NAME__"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $execution.id }}",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        608,
+        224
+      ],
+      "id": "7c9b30f9-7699-4aaa-8312-137cf86b8a8a",
+      "name": "Simple Memory1"
+    },
+    {
+      "parameters": {
+        "endpointUrl": "http://mcp-runner:8931/mcp",
+        "serverTransport": "httpStreamable",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.1,
+      "position": [
+        736,
+        224
+      ],
+      "id": "7c237ad7-27e4-46e2-940e-cca410afbce9",
+      "name": "MCP Client"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "generate-test",
+        "responseMode": "lastNode",
+        "responseData": "allEntries",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "content-type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        240,
+        -48
+      ],
+      "id": "ff3bbf3a-44db-42b4-9373-e2127d3c4586",
+      "name": "Webhook",
+      "webhookId": "1a49fbc9-f6ae-4398-8a9b-1fd3dbd70a4f"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b46aadb3-1d7b-4b7c-a8a2-6001272404ac",
+              "name": "output",
+              "value": "={{ $('AI Agent1').item.json.output }}",
+              "type": "string"
+            },
+            {
+              "id": "627c4806-82dc-4513-81d0-9f1a9d5133db",
+              "name": "screenshotBase64",
+              "value": "={{ $json.screenshotBase64 }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1536,
+        32
+      ],
+      "id": "285a5aec-b557-40e0-9b6e-13f3b1f31ce8",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "endpointUrl": "http://mcp-runner:8931/mcp",
+        "serverTransport": "httpStreamable",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.1,
+      "position": [
+        432,
+        -304
+      ],
+      "id": "2ac1ea45-77c2-4cbd-a09e-2395bf9ed1db",
+      "name": "MCP Client2"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.output }}",
+        "options": {
+          "systemMessage": "=You are an AI web automation agent. With the help of the available tools and the detailed test steps and scenarios, convert them into comprehensive playwright test code, run them. \n\nAnalyze the given web page and use the available tools effectively.\n\nAt the end provde me with the final comprehensive test results for all the test cases.\n \nNote: Always grab a snapshot of a webpage before doing anything.\n\nIMPORTANT: ALWAYS CARRY OUT ENTIRE TEST CASES PROVIDED. AT THE END GENERATE AND SHOW A COMPREHENSIVE TEST RESULT. SHOW THE TEST RESULT(PASS/FAIL) FOR EACH TEST CASE.",
+          "maxIterations": 100
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        656,
+        -640
+      ],
+      "id": "ba3a6244-4481-47d4-bc5b-840a19c39248",
+      "name": "AI Agent2"
+    },
+    {
+      "parameters": {
+        "endpointUrl": "http://mcp-runner:8931/mcp",
+        "serverTransport": "httpStreamable",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.1,
+      "position": [
+        944,
+        -320
+      ],
+      "id": "cf609c94-4a7c-44ee-b39f-9c8e0f3c8d31",
+      "name": "MCP Client3"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $execution.id }}",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        752,
+        -320
+      ],
+      "id": "3704ad03-dcea-4bbe-84cd-f103a191e59c",
+      "name": "Simple Memory2"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "claude-3-5-haiku-20241022",
+          "mode": "list",
+          "cachedResultName": "Claude Haiku 3.5"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        592,
+        -320
+      ],
+      "id": "28e9c918-434a-4769-bfea-c6e41bb6cd61",
+      "name": "Anthropic Chat Model1",
+      "credentials": {
+        "anthropicApi": {
+          "id": "CFq4WeQGZc2nl4As",
+          "name": "office"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "multi-agent",
+        "responseMode": "lastNode",
+        "responseData": "allEntries",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        32,
+        -640
+      ],
+      "id": "9daaf4fd-35c9-4fbd-a10a-b17dea37c53a",
+      "name": "Webhook1",
+      "webhookId": "f99ebfd9-fde8-43bd-89b0-ab47a4542fb3"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "17df6acc-b41c-4d91-aeef-2db396756658",
+              "name": "AI Agent Two",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1024,
+        -640
+      ],
+      "id": "798b04f5-19e8-4b18-b396-780ad5500a48",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Flexible screenshot path extractor for Anthropic output\nconst text = String($json.output ?? \"\");\n\n// 1) Find ANY absolute-looking Unix path that ends with an image extension.\n//    - excludes quotes, backticks, angle brackets, parentheses and common trailing punctuation\nconst IMG_EXT = \"(?:png|jpe?g|webp|gif)\";\nconst PATH_REGEX = new RegExp(\n  String.raw`\\/[^\\s\"'()\\[\\]<>` + \"`\" + String.raw`]+?\\.(?:${IMG_EXT})`,\n  \"ig\"\n);\n\n// Collect all matches\nlet paths = [...text.matchAll(PATH_REGEX)].map(m => m[0]);\n\n// 2) Clean trailing punctuation that might sneak in (e.g. \"…screenshot.png).\")\npaths = paths.map(p => p.replace(/[.,;:)\\]]+$/, \"\"));\n\n// 3) (Optional) Prefer /tmp paths if more than one was found\nconst preferTmp = paths.find(p => p.startsWith(\"/tmp/\"));\nconst screenshotPath = preferTmp ?? paths[0] ?? null;\n\n// 4) Extract filename\nconst fileName = screenshotPath ? screenshotPath.split(\"/\").pop() : null;\n\nreturn {\n  output: text,\n  screenshotPath,\n  fileName,\n  screenshotPaths: paths // keep all matches just in case\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        928,
+        -48
+      ],
+      "id": "8c7b378c-fcb7-4204-900c-998ae2361d5d",
+      "name": "Extract the Screenshot Name and Path"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "72c768a5-6169-4f02-8e2a-e49307f88493",
+              "leftValue": "={{ $json.screenshotPath }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "5c34707d-66d1-4b8e-9d89-866cd0c75a4e",
+              "leftValue": "={{ $json.screenshotPaths }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1200,
+        -48
+      ],
+      "id": "29111b73-f6b9-4b0f-9459-950a879186b8",
+      "name": "If Screenshot is present"
+    },
+    {
+      "parameters": {
+        "command": "=docker cp n8n-mcp-runner-1:{{ $json.screenshotPath }} ."
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        1536,
+        -160
+      ],
+      "id": "0909c0f6-12c4-4e65-9d74-39607975a1ec",
+      "name": "Copy the screenshot to host container"
+    },
+    {
+      "parameters": {
+        "fileSelector": "={{ $('Extract the Screenshot Name and Path').item.json.fileName }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        1744,
+        -160
+      ],
+      "id": "89adf445-5f89-4880-9c24-a90ec126b1e3",
+      "name": "Read screenshot as binary"
+    },
+    {
+      "parameters": {
+        "operation": "text",
+        "destinationKey": "screenshotBase64",
+        "options": {
+          "encoding": "base64"
+        }
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        1952,
+        -160
+      ],
+      "id": "a21f8134-dfb5-4fcb-97d2-ed720f33c9ae",
+      "name": "encode to base64"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b46aadb3-1d7b-4b7c-a8a2-6001272404ac",
+              "name": "output",
+              "value": "={{ $('AI Agent1').item.json.output }}",
+              "type": "string"
+            },
+            {
+              "id": "627c4806-82dc-4513-81d0-9f1a9d5133db",
+              "name": "screenshotBase64",
+              "value": "={{ $json.screenshotBase64 }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2224,
+        -160
+      ],
+      "id": "219a0065-64b7-4426-9df3-3ea990a9941b",
+      "name": "send final response"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        0,
+        -16
+      ],
+      "id": "b2748c01-9d28-4ca5-ae60-cca04c1ba907",
+      "name": "Edit Fields"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        []
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory1": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MCP Client": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Extract the Screenshot Name and Path",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MCP Client2": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MCP Client3": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory2": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent2": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract the Screenshot Name and Path": {
+      "main": [
+        [
+          {
+            "node": "If Screenshot is present",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Screenshot is present": {
+      "main": [
+        [
+          {
+            "node": "Copy the screenshot to host container",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Copy the screenshot to host container": {
+      "main": [
+        [
+          {
+            "node": "Read screenshot as binary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read screenshot as binary": {
+      "main": [
+        [
+          {
+            "node": "encode to base64",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "encode to base64": {
+      "main": [
+        [
+          {
+            "node": "send final response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "64c1c362-a6a9-4b6d-8641-e7c597ce8436",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c51e43b0411cc9785ddf670f9e053431f87e9413fb3ab84c90ddd65b9d40abdb"
+  },
+  "id": "tJnUrDMi2IFUQy2x",
+  "tags": []
+}
