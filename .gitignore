@@ -1,0 +1,28 @@
+# Node
+node_modules/
+
+# Environment files
+.env
+.env.*
+
+# n8n sensitive exports
+exported_workflows/*-secrets.json
+exported_workflows/*-credentials.json
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+
+# Logs
+*.log
+
+# Docker
+*.pid
+
+# Ignore exported workflow files with credentials (manual review still required)
+exported_workflows/My workflow.json
